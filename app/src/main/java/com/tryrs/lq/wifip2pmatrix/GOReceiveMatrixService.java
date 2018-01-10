@@ -12,18 +12,21 @@ import android.util.Log;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 
 /**
  * Created by Administrator on 2018/1/9 0009.
  */
 
 public class GOReceiveMatrixService extends Service {
-    String str;
+    float[][][] client1Data;
     Handler mHandler;
-    String contentFromClient2=null;
+    float[][][] contentFromClient2=null;
 
     @Override
     public void onCreate() {
@@ -33,33 +36,40 @@ public class GOReceiveMatrixService extends Service {
             public void run(){
                 ServerSocket serverSocket= null;
                 try {
-                    serverSocket = new ServerSocket(8889);
+                    serverSocket = new ServerSocket(8888);
                     while(true) {//while makes destroy impossible
                         Socket s = serverSocket.accept();
                         Log.i("server", "accept");
                         InputStream inputStream = s.getInputStream();
-                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                        //OutputStream outputStream=s.getOutputStream();
-                        int x;
-                        while ((x = inputStream.read()) >=0) {
-                            byteArrayOutputStream.write(x);break;
-
+                        ObjectInputStream objectInputStream=new ObjectInputStream(inputStream);
+                        try {
+                            Matrix m=(Matrix)objectInputStream.readObject();
+                            client1Data=m.a;
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
                         }
-                        byteArrayOutputStream.flush();
-                        //str=byteArrayOutputStream.toString();
-                        str="111";
+                        //objectInputStream.close();
+
                         Message message=Message.obtain();
                         message.what=1;
                         mHandler.sendMessage(message);
-                        Log.i("server1","mydata "+str);
+                        Log.i("server1","mydata is prepared");
                         while(contentFromClient2==null){}
 
 
-                        Log.i("receive client2", contentFromClient2);
+                        Log.i("receive client1", Arrays.toString(contentFromClient2[0][0]));
+
+                        //send matrix to client
                         OutputStream outputStream=s.getOutputStream();
-                        outputStream.write(contentFromClient2.getBytes());
-                        s.close();
+                        ObjectOutputStream objectOutputStream=new ObjectOutputStream(outputStream);
+                        Matrix mm=new Matrix(contentFromClient2);
+                        objectOutputStream.writeObject(mm);
                         contentFromClient2=null;
+                        //objectOutputStream.close();
+                        //s.close();
+                        objectOutputStream.flush();
+
+
 
                     }
 
@@ -91,13 +101,13 @@ public class GOReceiveMatrixService extends Service {
     }
 
     public class MyBinderTargetClient1 extends Binder {
-        public String getContentFromClient1(){
-            return "server1&"+str;
+        public float[][][] getContentFromClient1(){
+            return client1Data;
         }
         public void setHandler(Handler handler){
             mHandler=handler;
         }
-        public void setContentFromClient2(String content){
+        public void setContentFromClient2(float[][][] content){
             contentFromClient2=content;
         }
 

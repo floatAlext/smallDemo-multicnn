@@ -223,32 +223,20 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(Message message){
             if(message.what==1){
                 Log.i("receive msg from","server1");
-                String textFromClient1=myBinderTargetClient1.getContentFromClient1();//我是server1，我已经处理好了我的数据，你赶紧取走发给server2吧
+                float[][][] textFromClient1=myBinderTargetClient1.getContentFromClient1();//我是server1，我已经处理好了我的数据，你赶紧取走发给server2吧
                 Toast.makeText(MainActivity.this,"data from client1:"+textFromClient1,Toast.LENGTH_SHORT).show();
                 myBinderTargetClient2.setContentFromClient1(textFromClient1);
             }
             else if(message.what==2){
                 Log.i("receive msg from","server2");
-                String textFromClient2=myBinderTargetClient2.getContentFromClient2();
+                float[][][] textFromClient2=myBinderTargetClient2.getContentFromClient2();
                 Toast.makeText(MainActivity.this,"data from client2:"+textFromClient2,Toast.LENGTH_SHORT).show();
                 myBinderTargetClient1.setContentFromClient2(textFromClient2);
             }
         }
     }
 
-    public void sendDataToService(){
-        new Thread(){
-            public void run(){
 
-            }
-        }.start();
-
-        new Thread(){
-            public void run(){
-
-            }
-        }.start();
-    }
     @Override
     protected void onResume() {
         super.onResume();
